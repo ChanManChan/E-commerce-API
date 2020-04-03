@@ -6,7 +6,12 @@ const {
   findProductById,
   read,
   remove,
-  update
+  update,
+  list,
+  listRelated,
+  listCategories,
+  listBySearch,
+  photo
 } = require('../controllers/product');
 const { requireSignin, isAuth, isAdmin } = require('../controllers/auth');
 const { findUserById } = require('../controllers/user');
@@ -29,6 +34,14 @@ router.put(
   isAdmin,
   update
 );
+router.get('/products', list);
+router.get('/products/related/:productId', listRelated);
+router.get('/products/categories', listCategories);
+
+// The categories and price range etc. (filters) will be sent through the request body therefore we use "post" method
+router.post('/products/by/search', listBySearch);
+// this 'photo' method will act as a middleware whenever we need a photo for the product we fetch.
+router.get('/product/photo/:productId', photo);
 
 router.param('userId', findUserById);
 router.param('productId', findProductById);
