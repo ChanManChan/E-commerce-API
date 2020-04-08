@@ -180,7 +180,7 @@ exports.listBySearch = (req, res) => {
         // lte - less than
         findArgs[key] = {
           $gte: req.body.filters[key][0],
-          $lte: req.body.filters[key][1]
+          $lte: req.body.filters[key][1],
         };
       } else {
         findArgs[key] = req.body.filters[key];
@@ -198,7 +198,7 @@ exports.listBySearch = (req, res) => {
       if (err) return res.status(400).json({ error: 'Products not found' });
       res.json({
         size: data.length,
-        data
+        data,
       });
     });
 };
