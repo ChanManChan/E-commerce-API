@@ -3,6 +3,7 @@ const formidable = require('formidable');
 const _ = require('lodash');
 const fs = require('fs');
 const { errorHandler } = require('../helpers/dbErrorHandler');
+const queryString = require('query-string');
 
 exports.findProductById = (req, res, next, id) => {
   Product.findById(id).exec((err, product) => {
@@ -211,4 +212,19 @@ exports.photo = (req, res, next) => {
     return res.send(req.product.photo.data);
   }
   next();
+};
+
+exports.listSearch = (req, res) => {
+  // create query object to hold search and category value
+  const { search, category } = req.query;
+  const query = {};
+  // assign search value to query.name {and $options:'i' is for case insensitivity }
+  if (search) query.name = { $regex: search, $options: 'i' };
+  // assign category value to query.category
+  if (category && !category.includes('Default')) query.category = category;
+  // Find the product based on query object with 2 properties (Search and category)
+  Product.find(query, (err, products) => {
+    if (err) return res.status(400).json({ error: errorHandler(err) });
+    res.json(products);
+  }).select('-photo');
 };
