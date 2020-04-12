@@ -3,16 +3,17 @@ const formidable = require('formidable');
 const _ = require('lodash');
 const fs = require('fs');
 const { errorHandler } = require('../helpers/dbErrorHandler');
-const queryString = require('query-string');
 
 exports.findProductById = (req, res, next, id) => {
-  Product.findById(id).exec((err, product) => {
-    if (err || !product)
-      return res.status(400).json({ error: 'Product not found' });
-    // if product found then populate that in the request object
-    req.product = product;
-    next();
-  });
+  Product.findById(id)
+    .populate('category', '-__v')
+    .exec((err, product) => {
+      if (err || !product)
+        return res.status(400).json({ error: 'Product not found' });
+      // if product found then populate that in the request object
+      req.product = product;
+      next();
+    });
 };
 
 exports.read = (req, res) => {
