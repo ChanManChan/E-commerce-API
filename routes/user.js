@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const { requireSignin, isAdmin, isAuth } = require('../controllers/auth');
-const { findUserById, read, update } = require('../controllers/user');
+const {
+  findUserById,
+  read,
+  update,
+  purchaseHistory,
+} = require('../controllers/user');
 
 router.get('/secret/:userId', requireSignin, isAuth, isAdmin, (req, res) => {
   // if the request is made to 'secret/:userId', we would like to respond with that user information based on the 'userId'
@@ -14,6 +19,7 @@ router.get('/secret/:userId', requireSignin, isAuth, isAdmin, (req, res) => {
 });
 
 router.get('/user/:userId', requireSignin, isAuth, read);
+router.get('/orders/by/user/:userId', requireSignin, isAuth, purchaseHistory);
 router.put('/user/:userId', requireSignin, isAuth, update);
 
 // findUserById will look for the userId route parameter and anytime there is userId in the route this (findUserById) method will run automatically and make the user available in the request object. This will be extremely helpful, especially when we sign the user in, we might want to redirect them to the user dashboard and you want to display the basic information like the name description and so on.

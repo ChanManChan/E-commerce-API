@@ -13,6 +13,7 @@ const {
   listBySearch,
   photo,
   listSearch,
+  multipleDelete,
 } = require('../controllers/product');
 const { requireSignin, isAuth, isAdmin } = require('../controllers/auth');
 const { findUserById } = require('../controllers/user');
@@ -28,6 +29,14 @@ router.delete(
   isAdmin,
   remove
 );
+router.post(
+  '/delete/products/:userId',
+  requireSignin,
+  isAuth,
+  isAdmin,
+  multipleDelete
+);
+
 router.put(
   '/product/:productId/:userId',
   requireSignin,

@@ -72,6 +72,14 @@ exports.remove = (req, res) => {
   });
 };
 
+exports.multipleDelete = (req, res) => {
+  let productIds = req.body.selected;
+  Product.deleteMany({ _id: { $in: productIds } }).exec((err, result) => {
+    if (err) return res.status(400).json({ error: errorHandler(err) });
+    res.json({ message: 'Products deleted successfully' });
+  });
+};
+
 exports.update = (req, res) => {
   let form = new formidable.IncomingForm();
   form.keepExtensions = true;
