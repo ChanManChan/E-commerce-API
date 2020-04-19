@@ -2,6 +2,7 @@ const User = require('../models/user');
 const { errorHandler } = require('../helpers/dbErrorHandler');
 const jwt = require('jsonwebtoken');
 const expressJwt = require('express-jwt'); //for authorization check
+const { OAuth2Client } = require('google-auth-library');
 
 exports.signup = (req, res) => {
   console.log('REQUEST BODY FROM CONTROLLER: ', req.body);
@@ -9,13 +10,13 @@ exports.signup = (req, res) => {
   user.save((err, user) => {
     if (err) {
       return res.status(500).json({
-        error: errorHandler(err)
+        error: errorHandler(err),
       });
     }
     user.salt = undefined;
     user.hashed_password = undefined;
     res.json({
-      user
+      user,
     });
   });
 };
@@ -26,7 +27,7 @@ exports.signin = (req, res) => {
   User.findOne({ email }, (err, user) => {
     if (err || !user) {
       return res.status(400).json({
-        error: 'User with that email does not exist. Please signup.'
+        error: 'User with that email does not exist. Please signup.',
       });
     }
     // if user is found, make sure the email and password match
@@ -47,7 +48,7 @@ exports.signin = (req, res) => {
 exports.signout = (req, res) => {
   res.clearCookie('t');
   res.json({
-    message: 'Signout success.'
+    message: 'Signout success.',
   });
 };
 
@@ -57,14 +58,15 @@ exports.requireSignin = expressJwt({
   // if the token is valid, express-jwt appends the verified users id in an auth key to the request object.
   secret: process.env.JWT_SECRET,
   // with this we can access auth._id to check the currently signed in user's id
-  userProperty: 'auth'
+  userProperty: 'auth',
 });
 
 // PROTECT RESOURCES FOR AUTHENTICATED (isAuth) AND ADMIN (isAdmin) USERS
 exports.isAuth = (req, res, next) => {
   // 'req.profile' is the user we fetch from the route parameter and 'req.auth' is from expressJwt({userProperty: 'auth'}).
   // using 'requireSignin' as middleware in the route, we get this response :- "UnauthorizedError: No authorization token was found", if the user is not signed in.
-  let user = req.profile && req.auth && req.profile._id.toString() === req.auth._id;
+  let user =
+    req.profile && req.auth && req.profile._id.toString() === req.auth._id;
   if (!user) return res.status(403).json({ error: 'Access denied' });
   next();
 };
@@ -76,4 +78,54 @@ exports.isAdmin = (req, res, next) => {
   if (req.profile.role === 0)
     return res.status(403).json({ error: 'Admin resource, Access denied.' });
   next();
+};
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+exports.googleLogin = (req, res) => {
+  const { idToken } = req.body;
+  client
+    .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+    .then((response) => {
+      const { email_verified, name, email } = response.payload;
+      if (email_verified) {
+        User.findOne({ email }).exec((err, user) => {
+          if (user) {
+            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+              expiresIn: '7d',
+            });
+            const { _id, email, name, role } = user;
+            res.cookie('t', token, { expire: new Date() + 9999 });
+            return res.json({
+              token,
+              user: { _id, email, name, role },
+            });
+          } else {
+            let password = email + process.env.JWT_SECRET;
+            user = new User({ name, email, password });
+            user.save((err, data) => {
+              if (err) return res.status(400).json({ error: err });
+              else {
+                const token = jwt.sign(
+                  { _id: data._id },
+                  process.env.JWT_SECRET,
+                  {
+                    expiresIn: '7d',
+                  }
+                );
+                const { _id, email, name, role } = data;
+                res.cookie('t', token, { expire: new Date() + 9999 });
+                return res.json({
+                  token,
+                  user: { _id, email, name, role },
+                });
+              }
+            });
+          }
+        });
+      } else {
+        return res
+          .status(400)
+          .json({ error: 'Google login failed. Try again' });
+      }
+    });
 };

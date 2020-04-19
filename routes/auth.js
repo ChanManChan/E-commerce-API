@@ -4,13 +4,17 @@ const {
   signup,
   signin,
   signout,
-  requireSignin
+  requireSignin,
+  googleLogin,
 } = require('../controllers/auth');
 const { userSignupValidator } = require('../validator');
 
 router.post('/signup', userSignupValidator, signup);
 router.post('/signin', signin);
 router.get('/signout', signout);
+
+// Google and Facebook
+router.post('/google-login', googleLogin);
 
 // router.get('/hello', requireSignin, (req, res) => {
 //   // RESULT :-
