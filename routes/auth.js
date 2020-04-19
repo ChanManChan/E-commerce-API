@@ -4,11 +4,16 @@ const {
   signup,
   signin,
   signout,
-  requireSignin,
   googleLogin,
   facebookLogin,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/auth');
-const { userSignupValidator } = require('../validator');
+const {
+  userSignupValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+} = require('../validator');
 
 router.post('/signup', userSignupValidator, signup);
 router.post('/signin', signin);
@@ -18,10 +23,8 @@ router.get('/signout', signout);
 router.post('/google-login', googleLogin);
 router.post('/facebook-login', facebookLogin);
 
-// router.get('/hello', requireSignin, (req, res) => {
-//   // RESULT :-
-//   // UnauthorizedError: No authorization token was found
-//   res.send('Checking requireSignin controller method.');
-// });
+// Forgot & Reset password routes
+router.put('/forgot-password', forgotPasswordValidator, forgotPassword);
+router.put('/reset-password', resetPasswordValidator, resetPassword);
 
 module.exports = router;

@@ -6,7 +6,7 @@ exports.userSignupValidator = (req, res, next) => {
     .withMessage('Email must contain @')
     .isLength({
       min: 5,
-      max: 32
+      max: 32,
     });
   req.check('password', 'Password is required').notEmpty();
   req
@@ -17,7 +17,37 @@ exports.userSignupValidator = (req, res, next) => {
     .withMessage('Password must contain a number');
   const errors = req.validationErrors();
   if (errors) {
-    const firstError = errors.map(error => error.msg)[0];
+    const firstError = errors.map((error) => error.msg)[0];
+    return res.status(400).json({ error: firstError });
+  }
+  next();
+};
+
+exports.forgotPasswordValidator = (req, res, next) => {
+  req
+    .check('email', 'Must be a valid email address')
+    .matches(/.+\@.+\..+/)
+    .withMessage('Email must contain @')
+    .isLength({ min: 5, max: 32 });
+  const errors = req.validationErrors();
+  if (errors) {
+    const firstError = errors.map((error) => error.msg)[0];
+    return res.status(400).json({ error: firstError });
+  }
+  next();
+};
+
+exports.resetPasswordValidator = (req, res, next) => {
+  req.check('newPassword', 'Password is required').notEmpty();
+  req
+    .check('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long')
+    .matches(/\d/)
+    .withMessage('Password must contain a number');
+  const errors = req.validationErrors();
+  if (errors) {
+    const firstError = errors.map((error) => error.msg)[0];
     return res.status(400).json({ error: firstError });
   }
   next();
